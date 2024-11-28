@@ -6,3 +6,4 @@ data/*
 output/*
 */.ipynb_checkpoints/
 .DS_Store
+config.txt

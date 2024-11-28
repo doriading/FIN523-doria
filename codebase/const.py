@@ -11,9 +11,6 @@
 #########################################################################################
 
 
-
-
-
 import enum
 
 class TimeSpansForAnalysis(enum.Enum):
@@ -47,6 +44,25 @@ class Tickers(enum.Enum):
     # GBPUSD = 'GBPUSD'
     CNYUSD = 'CNYUSD'
     FED_FUNDS_RATE = 'FED_FUNDS_RATE'
+    # Step 0
+    US_INDPRO = 'US_INDPRO'
+    US_DGORDER = 'US_DGORDER'
+    US_RSAFS = 'US_RSAFS'
+    US_PAYEMS = 'US_PAYEMS'
+    US_UNRATE = 'US_UNRATE'
+    # US_ICSA = 'US_ICSA'
+    US_CIVPART = 'US_CIVPART'
+    US_CPIAUCSL = 'US_CPIAUCSL'
+    US_CPILFESL = 'US_CPILFESL'
+    US_PPIACO = 'US_PPIACO'
+    US_PCEPI = 'US_PCEPI'
+    US_BOPGSTB = 'US_BOPGSTB'
+    US_CSCICP03USM665S = 'US_CSCICP03USM665S'
+    US_UMCSENT = 'US_UMCSENT'
+    US_MTSDS133FMS = 'US_MTSDS133FMS'
+    US_HOUST = 'US_HOUST'
+    US_CSUSHPISA = 'US_CSUSHPISA'
+
     
 
 class TushareGlobalIndex(enum.Enum):
@@ -111,6 +127,23 @@ class FreddieMacSeries(enum.Enum):
     MORTGAGE_REFINANCE_APPLICATION = 'REFINANCE'
     MORTGAGE_REFINANCE_RATE = 'MORTGAGE_REFI'
     MORTGAGE_PURCHASE_RATE = 'MORTGAGE_PURCHASE'
+    US_INDPRO = "INDPRO"
+    US_DGORDER = "DGORDER"
+    US_RSAFS = "RSAFS"
+    US_PAYEMS = "PAYEMS"
+    US_UNRATE = "UNRATE"
+    # US_ICSA = "ICSA"
+    US_CIVPART = "CIVPART"
+    US_CPIAUCSL = "CPIAUCSL"
+    US_CPILFESL = "CPILFESL"
+    US_PPIACO = "PPIACO"
+    US_PCEPI = "PCEPI"
+    US_BOPGSTB = "BOPGSTB"
+    US_CSCICP03USM665S = "CSCICP03US"
+    US_UMCSENT = "UMCSENT"
+    US_MTSDS133FMS = "MTSDS133FMS"
+    US_HOUST = "HOUST"
+    US_CSUSHPISA = "CSUSHPISA"
 
 
 TICKER_SYMBOLS = {
@@ -136,6 +169,23 @@ TICKER_SYMBOLS = {
     # "GBPUSD": yFinanceTickers.GBPUSD.value,
     "CNYUSD": yFinanceTickers.CNYUSD.value,
     "FED_FUNDS_RATE": FreddieMacSeries.FEDERAL_FUNDS_RATE.value,
+    "US_INDPRO": FreddieMacSeries.US_INDPRO.value,
+    "US_DGORDER": FreddieMacSeries.US_DGORDER.value,
+    "US_RSAFS": FreddieMacSeries.US_RSAFS.value,
+    "US_PAYEMS": FreddieMacSeries.US_PAYEMS.value,
+    "US_UNRATE": FreddieMacSeries.US_UNRATE.value,
+    # "US_ICSA": FreddieMacSeries.US_ICSA.value,
+    "US_CIVPART": FreddieMacSeries.US_CIVPART.value,
+    "US_CPIAUCSL": FreddieMacSeries.US_CPIAUCSL.value,
+    "US_CPILFESL": FreddieMacSeries.US_CPILFESL.value,
+    "US_PPIACO": FreddieMacSeries.US_PPIACO.value,
+    "US_PCEPI": FreddieMacSeries.US_PCEPI.value,
+    "US_BOPGSTB": FreddieMacSeries.US_BOPGSTB.value,
+    "US_CSCICP03USM665S": FreddieMacSeries.US_CSCICP03USM665S.value,
+    "US_UMCSENT": FreddieMacSeries.US_UMCSENT.value,
+    "US_MTSDS133FMS": FreddieMacSeries.US_MTSDS133FMS.value,
+    "US_HOUST": FreddieMacSeries.US_HOUST.value,
+    "US_CSUSHPISA": FreddieMacSeries.US_CSUSHPISA.value,
 }
 
 TICKER_SOURCE = {
@@ -161,6 +211,23 @@ TICKER_SOURCE = {
     # "GBPUSD": "yfinance",
     "CNYUSD": "yfinance",
     "FED_FUNDS_RATE": "fred",
+    "US_INDPRO": "fred",
+    "US_DGORDER": "fred",
+    "US_RSAFS": "fred",
+    "US_PAYEMS": "fred",
+    "US_UNRATE": "fred",
+    # "US_ICSA": "fred",
+    "US_CIVPART": "fred",
+    "US_CPIAUCSL": "fred",
+    "US_CPILFESL": "fred",
+    "US_PPIACO": "fred",
+    "US_PCEPI": "fred",
+    "US_BOPGSTB": "fred",
+    "US_CSCICP03USM665S": "fred",
+    "US_UMCSENT": "fred",
+    "US_MTSDS133FMS": "fred",
+    "US_HOUST": "fred",
+    "US_CSUSHPISA": "fred",
 }
 
 TICKER_CHINESE = {
@@ -186,6 +253,23 @@ TICKER_CHINESE = {
     # "GBPUSD": "英镑兑美元",
     "CNYUSD": "人民币兑美元",
     "FED_FUNDS_RATE": "联邦基金利率",
+    "US_INDPRO": "美国工业生产指数",
+    "US_DGORDER": "美国耐用品订单",
+    "US_RSAFS": "美国零售销售额",
+    "US_PAYEMS": "美国非农就业人数",
+    "US_UNRATE": "美国失业率",
+    # "US_ICSA": "美国初请失业金人数",
+    "US_CIVPART": "美国劳动参与率",
+    "US_CPIAUCSL": "美国消费者价格指数(CPI)",
+    "US_CPILFESL": "美国核心消费者价格指数(不含食品和能源CPI)",
+    "US_PPIACO": "美国生产者价格指数(PPI)",
+    "US_PCEPI": "美国个人消费支出价格指数(PCEPI)",
+    "US_BOPGSTB": "美国贸易收支",
+    "US_CSCICP03USM665S": "美国消费者信心指数（会议委员会）",
+    "US_UMCSENT": "美国密歇根大学消费者信心指数（调查）",
+    "US_MTSDS133FMS": "美国联邦预算赤字或盈余",
+    "US_HOUST": "美国新屋开工数",
+    "US_CSUSHPISA": "美国房价指数",
 }
 
 TICKER_ENGLISH = {
@@ -211,6 +295,23 @@ TICKER_ENGLISH = {
     # "GBPUSD": "British Pound to US Dollar",
     "CNYUSD": "Chinese Yuan to US Dollar",
     "FED_FUNDS_RATE": "Federal Funds Rate",
+    "US_INDPRO": "US Industrial Production",
+    "US_DGORDER": "US Durable Goods Orders",
+    "US_RSAFS": "US Retail Sales",
+    "US_PAYEMS": "US Nonfarm Payrolls",
+    "US_UNRATE": "US Unemployment Rate",
+    # "US_ICSA": "US Initial Claims",
+    "US_CIVPART": "US Civilian Labor Force Participation Rate",
+    "US_CPIAUCSL": "US Consumer Price Index (CPI)",
+    "US_CPILFESL": "US Core Consumer Price Index (CPI)",
+    "US_PPIACO": "US Producer Price Index (PPI)",
+    "US_PCEPI": "US Personal Consumption Expenditures Price Index (PCEPI)",
+    "US_BOPGSTB": "US Balance of Payments",
+    "US_CSCICP03USM665S": "US Conference Board Consumer Confidence Index",
+    "US_UMCSENT": "US University of Michigan Consumer Sentiment Index",
+    "US_MTSDS133FMS": "US Federal Budget Deficit/Surplus",
+    "US_HOUST": "US Housing Starts",
+    "US_CSUSHPISA": "US Case-Shiller Home Price Index",
 }
 
 ENGLISH_TICKER = {v: k for k, v in TICKER_ENGLISH.items()}

@@ -24,6 +24,7 @@ import scipy.stats as stats
 from tqdm import tqdm
 import statsmodels.api as sm
 from codebase.const import *
+from typing import List
 from codebase.dataloader import FinanceDataLoader
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import PolynomialFeatures
@@ -245,6 +246,29 @@ class FinancialDataAnalyzer:
         os.makedirs("output/polynomial_regression", exist_ok=True)
         self.polynomial_regression_results.to_csv(f"output/polynomial_regression/polynomial_regression_{self.start_date}_{self.end_date}.csv", index=False)
         return self.polynomial_regression_results
+    
+    def overall_linear_regression_multi_factor_analysis(self, plot: bool = False) -> pd.DataFrame:
+        """
+        对 correlation 大于阈值的金融指数对进行多因子线性回归分析。
+        检验模型的显著性，包括 R^2、p-value、t-value。
+        """
+        exog_ticker_names = [
+            Tickers.US_INDPRO.value, Tickers.US_DGORDER.value, Tickers.US_RSAFS.value, Tickers.US_PAYEMS.value,
+            Tickers.US_UNRATE.value, Tickers.US_CIVPART.value, Tickers.US_CPIAUCSL.value, Tickers.US_CPILFESL.value,
+            Tickers.US_PPIACO.value, Tickers.US_PCEPI.value, Tickers.US_BOPGSTB.value, Tickers.US_CSCICP03USM665S.value, Tickers.US_UMCSENT.value,
+            Tickers.US_MTSDS133FMS.value, Tickers.US_HOUST.value, Tickers.US_CSUSHPISA.value, Tickers.FED_FUNDS_RATE.value,
+            ]
+        regression_result = {}
+        for ticker_name in self.data:
+            if ticker_name not in exog_ticker_names:
+                result = self.linear_regression_multi_factors(ticker_name, exog_ticker_names, plot=plot)
+                if result is not None:
+                    regression_result[TICKER_ENGLISH[ticker_name]] = result
+        regression_df = pd.concat(regression_result.values(), keys=regression_result.keys())
+        os.makedirs("output/linear_regression_multi_factors", exist_ok=True)
+        regression_df.to_csv(f"output/linear_regression_multi_factors/linear_regression_multi_factors_{self.start_date}_{self.end_date}.csv", index=True)
+        return regression_df
+
 
     def linear_regression(self, ticker1_name: str, ticker2_name: str, plot: bool = False) -> pd.DataFrame:
         """
@@ -259,7 +283,7 @@ class FinancialDataAnalyzer:
         
         # 合并两个金融指数的历史数据，并过滤异常值
         df = df1.merge(df2, on='Date', suffixes=('_1', '_2'), how='inner')
-        df = df[(df['Data_1'].between(-1e-10, 50000)) & (df['Data_2'].between(-1e-10, 50000))]
+        # df = df[(df['Data_1'].between(-1e-10, 50000)) & (df['Data_2'].between(-1e-10, 50000))]
         if df.shape[0] < 3:
             return None
         
@@ -311,6 +335,90 @@ class FinancialDataAnalyzer:
             't-value': [t_value],
             'p-value': [p_value]
         }
+        
+        return pd.DataFrame(results)
+    
+    def linear_regression_multi_factors(self, endog_ticker_name: str, exog_ticker_names: List[str], plot: bool = False) -> pd.DataFrame:
+        """
+        使用线性回归模型分析一个金融指数与多个金融指数之间的关系，并可视化结果。
+        :param endog_ticker_name: 作为因变量的金融指数名称
+        :param exog_ticker_names: 作为自变量的金融指数名称列表
+        :param plot: 是否绘制回归结果图
+        :return: 包含线性回归模型的系数、截距、R^2、均方误差 (MSE)、t 值和 p 值的 pandas DataFrame
+        """
+        # 从数据集中获取因变量和自变量的时间序列
+        df_endog = self.data[endog_ticker_name]
+        # 判断 df_endog 是否是日频
+        # if pd.infer_freq(df_endog.index) == 'D':
+        #     # 生成完整的日期范围
+        #     full_date_range = pd.date_range(start=df_endog.index.min(), end=df_endog.index.max(), freq='D')
+        #     # 重新索引并使用线性插值法补全数据
+        #     df_endog = df_endog.reindex(full_date_range).interpolate(method='linear')
+        existing_exog_ticker_names = [ticker for ticker in exog_ticker_names if ticker in self.data]
+        df_exog = [self.data[ticker] for ticker in exog_ticker_names if ticker in self.data]
+        
+        # 合并所有金融指数的历史数据
+        df = df_endog
+        for i, df_ex in enumerate(df_exog):
+            df = df.merge(df_ex, on='Date', suffixes=('', f'_{i}'), how='inner')
+        
+        if df.shape[0] < 3:
+            logger.debug(f"Insufficient data for {endog_ticker_name} and {exog_ticker_names}.")
+            print(df)
+            return None
+        
+        # 因变量（Y）和自变量（X）
+        Y = df['Data'].values  # 因变量
+        X = df[[f'Data_{i}' for i in range(len(df_exog))]].values  # 自变量
+        
+        # 添加截距项（constant）并构建 statsmodels 的回归模型
+        X_with_intercept = sm.add_constant(X)  # 增加截距列
+        model = sm.OLS(Y, X_with_intercept).fit()  # 用最小二乘法拟合
+        
+        # 获取模型的参数（系数和截距）
+        coefficients = model.params  # 回归系数和截距
+        intercept = coefficients[0]  # 截距
+        slopes = coefficients[1:]  # 回归系数
+        
+        # 预测目标变量
+        Y_pred = model.predict(X_with_intercept)
+        
+        # 计算模型性能指标
+        mse = mean_squared_error(Y, Y_pred)  # 均方误差
+        r2 = r2_score(Y, Y_pred)  # 拟合优度 R^2
+        
+        # 获取 t 值和 p 值
+        t_values = model.tvalues
+        p_values = model.pvalues
+        
+        # 可视化结果
+        if plot:
+            plt.figure(figsize=(12, 6), dpi=100)
+            plt.scatter(Y, Y_pred, color='blue', alpha=0.6, label='Actual vs Predicted')
+            plt.plot([Y.min(), Y.max()], [Y.min(), Y.max()], color='red', label='Perfect Fit')
+            plt.xlabel(f'Actual {TICKER_ENGLISH[endog_ticker_name]}')
+            plt.ylabel(f'Predicted {TICKER_ENGLISH[endog_ticker_name]}')
+            plt.title(f'Linear Regression Multi Factors: {TICKER_ENGLISH[endog_ticker_name]} R^2 = {r2:.2f}, MSE = {mse:.2f}')
+            plt.legend()
+            plt.grid()
+            plt.show()
+        
+        # 构建结果 DataFrame
+        results = {
+            'Intercept': [intercept],
+            'R^2': [r2],
+            'MSE': [mse]
+        }
+        for ticker in exog_ticker_names:
+            if ticker in self.data:
+                i = existing_exog_ticker_names.index(ticker)
+                results[f'Coefficient (Slope) {ticker}'] = [slopes[i]]
+                results[f't-value {ticker}'] = [t_values[i+1]]
+                results[f'p-value {ticker}'] = [p_values[i+1]]
+            else:
+                results[f'Coefficient (Slope) {ticker}'] = [0]
+                results[f't-value {ticker}'] = [0]
+                results[f'p-value {ticker}'] = [0]
         
         return pd.DataFrame(results)
        
