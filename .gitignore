@@ -1,0 +1,7 @@
+*/__pycache__/
+*/.DS_Store
+*/.vscode/
+*/.idea/
+data/*
+output/*
+*/.ipynb_checkpoints/
