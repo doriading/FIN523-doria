@@ -204,7 +204,7 @@ TICKER_SOURCE = {
     "GER10Y_TREASURY": "fred",
     "JPN10Y_TREASURY": "fred",
     "UK10Y_TREASURY": "fred",
-    "GOLD": "local",
+    "GOLD": "local", # Wolrd Gold Council
     "OIL": "yfinance",
     "EURUSD": "local",
     "JPYUSD": "yfinance",

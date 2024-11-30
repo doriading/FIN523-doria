@@ -42,6 +42,7 @@ class FinancialDataAnalyzer:
         self.end_date = end_date
         self.data_loader = FinanceDataLoader(start_date, end_date)
         self.data: Dict[str, pd.DataFrame] = {}
+        self.exog_data: Dict[str, pd.DataFrame] = {}
         self.statistics: pd.DataFrame = pd.DataFrame()
         self.covariance: pd.DataFrame = pd.DataFrame()
         self.correlation: pd.DataFrame = pd.DataFrame()
@@ -49,6 +50,13 @@ class FinancialDataAnalyzer:
         self.high_correlation: Dict[str, Any] = {}
         self.linear_regression_results: Dict[str, Any] = {}
         self.polynomial_regression_results: Dict[str, Any] = {}
+        self.exog_ticker_names = [
+            Tickers.US_INDPRO.value, Tickers.US_DGORDER.value, Tickers.US_RSAFS.value, Tickers.US_PAYEMS.value,
+            Tickers.US_UNRATE.value, Tickers.US_CIVPART.value, Tickers.US_CPIAUCSL.value, Tickers.US_CPILFESL.value,
+            Tickers.US_PPIACO.value, Tickers.US_PCEPI.value, Tickers.US_BOPGSTB.value, Tickers.US_CSCICP03USM665S.value, 
+            Tickers.US_UMCSENT.value, Tickers.US_MTSDS133FMS.value, Tickers.US_HOUST.value, Tickers.US_CSUSHPISA.value, 
+            Tickers.FED_FUNDS_RATE.value,
+        ]
     
     def load_data(self, enable_cache: bool = True):
         """
@@ -58,7 +66,12 @@ class FinancialDataAnalyzer:
             df = self.data_loader.load_or_get_data(ticker, TICKER_SOURCE[ticker], enable_cache)
             # time.sleep(1)
             if df is not None:
-                self.data[ticker] = df.dropna()
+                df.dropna(inplace=True)
+                if not df.empty:
+                    if ticker in self.exog_ticker_names:
+                        self.exog_data[ticker] = df.copy()
+                    else:
+                        self.data[ticker] = df.copy()
             else:
                 logger.debug(f"Failed to load data for {TICKER_ENGLISH[ticker]}.")
         logger.info(f"Loaded {len(self.data)} financial indices.")
@@ -83,7 +96,7 @@ class FinancialDataAnalyzer:
         if len(all_statistics) > 0:
             self.statistics = pd.concat(all_statistics.values())
         os.makedirs("output/statistics", exist_ok=True)
-        self.change_ratio.to_csv(f"output/statistics/statistics_{self.start_date}_{self.end_date}.csv", index=False)
+        self.change_ratio.to_csv(f"output/statistics/statistics_{self.start_date}_{self.end_date}.csv", index=True)
         return self.statistics
 
     def calculate_covariance(self) -> pd.DataFrame:
@@ -95,7 +108,7 @@ class FinancialDataAnalyzer:
         self.covariance.columns = [TICKER_ENGLISH[ticker] for ticker in self.data]
         self.covariance.index = [TICKER_ENGLISH[ticker] for ticker in self.data]
         os.makedirs("output/covariance", exist_ok=True)
-        self.change_ratio.to_csv(f"output/covariance/covariance_{self.start_date}_{self.end_date}.csv", index=False)
+        self.change_ratio.to_csv(f"output/covariance/covariance_{self.start_date}_{self.end_date}.csv", index=True)
         return self.covariance
     
     def calculate_correlation(self) -> pd.DataFrame:
@@ -107,7 +120,7 @@ class FinancialDataAnalyzer:
         self.correlation.columns = [TICKER_ENGLISH[ticker] for ticker in self.data]
         self.correlation.index = [TICKER_ENGLISH[ticker] for ticker in self.data]
         os.makedirs("output/correlation", exist_ok=True)
-        self.change_ratio.to_csv(f"output/correlation/correlation_{self.start_date}_{self.end_date}.csv", index=False)
+        self.correlation.to_csv(f"output/correlation/correlation_{self.start_date}_{self.end_date}.csv", index=True)
         return self.correlation
     
     def calculate_change_ratio(self) -> pd.DataFrame:
@@ -129,7 +142,7 @@ class FinancialDataAnalyzer:
             
         self.change_ratio = pd.DataFrame(all_change_ratio, index=[f"{self.start_date} - {self.end_date}"]).T
         os.makedirs("output/change_ratio", exist_ok=True)
-        self.change_ratio.to_csv(f"output/change_ratio/change_ratio_{self.start_date}_{self.end_date}.csv", index=False)
+        self.change_ratio.to_csv(f"output/change_ratio/change_ratio_{self.start_date}_{self.end_date}.csv", index=True)
         return self.change_ratio
     
     
@@ -138,6 +151,12 @@ class FinancialDataAnalyzer:
         选择相关系数大于阈值的金融指数对。
         """
         high_correlation = {}
+        exog_ticker_names = [
+            Tickers.US_INDPRO.value, Tickers.US_DGORDER.value, Tickers.US_RSAFS.value, Tickers.US_PAYEMS.value,
+            Tickers.US_UNRATE.value, Tickers.US_CIVPART.value, Tickers.US_CPIAUCSL.value, Tickers.US_CPILFESL.value,
+            Tickers.US_PPIACO.value, Tickers.US_PCEPI.value, Tickers.US_BOPGSTB.value, Tickers.US_CSCICP03USM665S.value, Tickers.US_UMCSENT.value,
+            Tickers.US_MTSDS133FMS.value, Tickers.US_HOUST.value, Tickers.US_CSUSHPISA.value, Tickers.FED_FUNDS_RATE.value,
+            ]
         for ticker1 in self.correlation:
             for ticker2 in self.correlation:
                 if ticker1 == ticker2:
@@ -148,7 +167,7 @@ class FinancialDataAnalyzer:
                     high_correlation[ticker1 + "|" + ticker2] = self.correlation[ticker1][ticker2]
         self.high_correlation = pd.DataFrame(high_correlation, index=["Correlation"]).T
         os.makedirs("output/high_correlation", exist_ok=True)
-        self.change_ratio.to_csv(f"output/high_correlation/high_correlation_{self.start_date}_{self.end_date}.csv", index=False)
+        self.high_correlation.to_csv(f"output/high_correlation/high_correlation_{self.start_date}_{self.end_date}.csv", index=True)
         return self.high_correlation
     
     # def regression_analysis(self) -> pd.DataFrame:
@@ -220,7 +239,7 @@ class FinancialDataAnalyzer:
             }
         self.linear_regression_results = pd.DataFrame(self.linear_regression_results).T
         os.makedirs("output/linear_regression", exist_ok=True)
-        self.linear_regression_results.to_csv(f"output/linear_regression/linear_regression_{self.start_date}_{self.end_date}.csv", index=False)
+        self.linear_regression_results.to_csv(f"output/linear_regression/linear_regression_{self.start_date}_{self.end_date}.csv", index=True)
         return self.linear_regression_results
 
     def overall_polynomial_regression_analysis(self, plot: bool = False) -> pd.DataFrame:
@@ -244,7 +263,7 @@ class FinancialDataAnalyzer:
             }
         self.polynomial_regression_results = pd.DataFrame(self.polynomial_regression_results).T
         os.makedirs("output/polynomial_regression", exist_ok=True)
-        self.polynomial_regression_results.to_csv(f"output/polynomial_regression/polynomial_regression_{self.start_date}_{self.end_date}.csv", index=False)
+        self.polynomial_regression_results.to_csv(f"output/polynomial_regression/polynomial_regression_{self.start_date}_{self.end_date}.csv", index=True)
         return self.polynomial_regression_results
     
     def overall_linear_regression_multi_factor_analysis(self, plot: bool = False) -> pd.DataFrame:
@@ -354,8 +373,8 @@ class FinancialDataAnalyzer:
         #     full_date_range = pd.date_range(start=df_endog.index.min(), end=df_endog.index.max(), freq='D')
         #     # 重新索引并使用线性插值法补全数据
         #     df_endog = df_endog.reindex(full_date_range).interpolate(method='linear')
-        existing_exog_ticker_names = [ticker for ticker in exog_ticker_names if ticker in self.data]
-        df_exog = [self.data[ticker] for ticker in exog_ticker_names if ticker in self.data]
+        existing_exog_ticker_names = [ticker for ticker in exog_ticker_names if ticker in self.exog_data]
+        df_exog = [self.exog_data[ticker] for ticker in exog_ticker_names if ticker in self.exog_data]
         
         # 合并所有金融指数的历史数据
         df = df_endog
@@ -410,7 +429,7 @@ class FinancialDataAnalyzer:
             'MSE': [mse]
         }
         for ticker in exog_ticker_names:
-            if ticker in self.data:
+            if ticker in self.exog_data:
                 i = existing_exog_ticker_names.index(ticker)
                 results[f'Coefficient (Slope) {ticker}'] = [slopes[i]]
                 results[f't-value {ticker}'] = [t_values[i+1]]
